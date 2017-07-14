@@ -44,7 +44,8 @@ class Service {
 
     const parseArray = arr => {
       if (arr.rows) {
-        arr.rows.forEach(obj => parse(obj.doc))
+        const type = arr.rows[0].doc ? 'doc' : 'value'
+        arr.rows.forEach(obj => parse(obj[type]))
       }
       return arr
     }
@@ -57,16 +58,10 @@ class Service {
   _bulk(docs, params) { return this.db.then(db => db.bulkAsync(docs, params)) }
   _insert(doc, params) { return this.db.then(db => db.insertAsync(doc, params)) }
   _destroy(id, rev) { return this.db.then(db => db.destroyAsync(id, rev)) }
-
-  _view(params) {
-    const designname = params.view.designname
-    const viewname = params.view.viewname
-
-    return this.db.then(db => db.viewAsync(designname, viewname, params))
-  }
+  _view(query, params) { return this.db.then(db => db.viewAsync(query.designname, query.viewname, params)) }
 
   find(params = {}) {
-    return (params.view ? this._view(params) : this._list(Object.assign({ include_docs: true }, params)))
+    return (params.query ? this._view(params.query, params.params) : this._list(Object.assign({ include_docs: true }, params)))
       .then(obj => this._return(obj))
       .catch(errorHandler)
   }
