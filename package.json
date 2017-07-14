@@ -2,11 +2,11 @@
   "name": "feathers-couchdb",
   "version": "1.0.0",
   "description": "A couchdb service for feathers",
-  "main": "index.js",
+  "main": "lib/",
   "scripts": {
     "watch": "babel --watch -d lib/ src/",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "rm -rf lib/ && babel -d lib/ src/ && babel test/test.js --out-file test/index.js",
+    "compile": "rimraf lib/ && babel -d lib/ src/ && babel test/test.js --out-file test/index.js",
     "start": "node test/index.js"
   },
   "repository": {
