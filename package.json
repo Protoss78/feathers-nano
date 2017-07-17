@@ -6,7 +6,7 @@
   "scripts": {
     "watch": "babel --watch -d lib/ src/",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "compile": "rimraf lib/ && babel -d lib/ src/ && babel test/test.js --out-file test/index.js",
+    "compile": "rimraf lib/ && babel -d lib/ src/",
     "start": "node test/index.js"
   },
   "repository": {
@@ -46,6 +46,7 @@
     "feathers-hooks": "^2.0.2",
     "feathers-rest": "^1.8.0",
     "feathers-service-tests": "^0.10.2",
-    "nano": "^6.4.0"
+    "nano": "^6.4.0",
+    "rimraf": "^2.6.1"
   }
 }
