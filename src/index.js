@@ -43,7 +43,7 @@ class Service {
     }
 
     const parseArray = arr => {
-      if (arr.rows) {
+      if (arr.rows && arr.rows.length) {
         const type = arr.rows[0].doc ? 'doc' : 'value'
         arr.rows.forEach(obj => parse(obj[type]))
       }
@@ -85,6 +85,7 @@ class Service {
 
         return Array.isArray(data) ? bulkAssign(data, res) : assign(data, res)
       })
+      .then(res => this._return(res))
       .catch(errorHandler)
   }
 
