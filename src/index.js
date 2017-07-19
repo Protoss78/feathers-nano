@@ -25,6 +25,7 @@ class Service {
 
     this.db = get(options.database)
       .catch(() => create(options.database))
+      .catch(() => true) // always invoke next then
       .then(() => Promise.promisifyAll(this.connection.use(options.database)))
   }
 
@@ -36,6 +37,7 @@ class Service {
     const isArray = !data._id
 
     const parse = obj => {
+      if (!obj) { throw new _feathersErrors2.default.BadRequest('Document contains an invalid ID.') }
       Object.assign(obj, { id: obj._id })
       delete obj._id
       delete obj._rev
