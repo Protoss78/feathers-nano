@@ -1,5 +1,5 @@
 {
-  "name": "feathers-couchdb",
+  "name": "@kapmug/feathers-couchdb",
   "version": "1.0.0",
   "description": "A couchdb service for feathers",
   "main": "lib/",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bazaglia/feathers-couchdb.git"
+    "url": "git+https://github.com/kapmug/feathers-couchdb.git"
   },
   "keywords": [
     "feathers",
