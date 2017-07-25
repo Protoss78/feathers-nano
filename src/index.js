@@ -37,7 +37,7 @@ class Service {
     const isArray = !data._id
 
     const parse = obj => {
-      if (!obj) { throw new _feathersErrors2.default.BadRequest('Document contains an invalid ID.') }
+      if (!obj) { throw new errors.BadRequest('Document contains an invalid ID.') }
       Object.assign(obj, { id: obj._id })
       delete obj._id
       delete obj._rev
