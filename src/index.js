@@ -33,15 +33,19 @@ class Service {
     return Proto.extend(obj, this)
   }
 
+  _safeAttributes(obj) {
+    delete obj._id
+    delete obj._rev
+    return obj
+  }
+
   _return(data) {
     const isArray = !data._id
 
     const parse = obj => {
       if (!obj) { throw new errors.BadRequest('Document contains an invalid ID.') }
       Object.assign(obj, { id: obj._id })
-      delete obj._id
-      delete obj._rev
-      return obj
+      return this._safeAttributes(obj)
     }
 
     const parseArray = arr => {
@@ -108,9 +112,9 @@ class Service {
     return this._get(id, params)
       .then(doc => {
         const rev = doc._rev
-        doc = this._return(doc)
+        doc = this._safeAttributes(doc)
         Object.assign(doc, { _rev: rev }, data)
-        return this._insert(doc, id).then(() => doc)
+        return this._insert(doc, id).then(() => Object.assign(doc, { id }))
       })
       .catch(errorHandler)
   }
