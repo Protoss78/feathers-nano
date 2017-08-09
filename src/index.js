@@ -2,6 +2,7 @@ import Promise from 'bluebird'
 import Proto from 'uberproto'
 import errors from 'feathers-errors'
 import errorHandler from './error-handler'
+import { mergeDeep } from './util'
 
 class Service {
   constructor(options) {
@@ -113,7 +114,7 @@ class Service {
       .then(doc => {
         const rev = doc._rev
         doc = this._safeAttributes(doc)
-        Object.assign(doc, { _rev: rev }, data)
+        mergeDeep(doc, { _rev: rev }, data)
         return this._insert(doc, id).then(() => Object.assign(doc, { id }))
       })
       .catch(errorHandler)

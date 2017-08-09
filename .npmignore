@@ -2,9 +2,12 @@
 .istanbul.yml
 .travis.yml
 .editorconfig
+.eslintrc.json
 .idea/
 src/
 test/
+example/
 !lib/
 .github/
 coverage
+yarn.lock
