@@ -1,6 +1,6 @@
 ## Synopsis
 
-A CouchDB CRUD service for [FeathersJS](https://github.com/feathersjs/feathers).
+A CouchDB/PouchDB CRUD service for [FeathersJS](https://github.com/feathersjs/feathers).
 
 ## Code Example
 
