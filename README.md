@@ -27,4 +27,4 @@ app.service('tests').get('18423385ef707d5fb46c61e7d70148a4').then(res => console
 
 ## Motivation
 
-Although FeathersJS provides many official database adapters, currently there is no adapter for CouchDB. This package is a preliminary implementation of a non-official CouchDB adapter.
+Although FeathersJS provides many official database adapters, currently there is no adapter for CouchDB/PouchDB. This package is a preliminary implementation of a non-official CouchDB/PouchDB adapter.
