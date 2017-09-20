@@ -1,8 +1,8 @@
-import feathers from 'feathers'
-import rest from 'feathers-rest'
-const bodyParser = require('body-parser');
-import nano from 'nano'
-import service from '../lib'
+const feathers = require('feathers')
+const rest = require('feathers-rest')
+const bodyParser = require('body-parser')
+const nano = require('nano')
+const service = require('../lib')
 
 const app = feathers()
   .configure(rest())
@@ -18,13 +18,16 @@ const opts = {
 const options = {
   name: 'tests',
   connection: nano(opts),
-  database: 'test',
+  database: 'tests',
   paginate: false,
 }
 
+const params = { include_docs: true }
+
 app.service('tests', service(options))
-//app.service('tests').get('18423385ef707d5fb46c61e7d70148a4').then(res => console.log(res)).catch(console.log)
-//app.service('tests').find({ include_docs: true }).then(res => console.log(res.rows[1].doc))
+//app.service('tests').get('app:person:04080670044:v1').then(res => console.log(res)).catch(console.log)
+//app.service('tests').find(params).then(res => console.log(res))
+//app.service('tests').find(params).then(res => console.log(res.rows[1].doc))
 //app.service('tests').patch('18423385ef707d5fb46c61e7d70052a3', { updated: true, newName: 'Jeremy' }).then(console.log)
 //app.service('tests').remove('18423385ef707d5fb46c61e7d70052a3').then(console.log)
 //app.service('tests').create({message:'test messages'}).then(console.log)
@@ -33,19 +36,22 @@ app.service('tests', service(options))
 
 /*
 const view = {
-  query: {
-    designname: 'mydoc',
-    viewname: 'listById',
-  },
+  view: 'mydoc/listById',
   params: {
     keys: ['bank:default:na:na:na:000', 'productType:default:na:na:na:PK4DCWBFZ'],
   }
 }
 
 app.service('tests').find(view).then(console.log)
+*/
 
- */
+const selector = {
+  query: {
+    "selector": {
+      "name" : "Adriana Goveia",
+      "rgState" : "SSP"
+    }
+  }
+}
 
-app
-  .use('/tests', service(options))
-  .listen(3030).on('listening', () => console.log('Feathers Message MongoDB service running on 127.0.0.1:3030'))
+app.service('tests').find(selector).then(res => console.log(res))

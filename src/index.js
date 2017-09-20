@@ -19,6 +19,7 @@ class Service {
     }
 
     this.connection = options.connection
+    this.database = options.database
     this.paginate = options.paginate || {}
 
     const create = Promise.promisify(this.connection.db.create)
@@ -60,17 +61,28 @@ class Service {
     return isArray ? parseArray(data) : parse(data)
   }
 
-  _get(id, params) { return this.db.then(db => db.getAsync(id, params)) }
   _list(params) { return this.db.then(db => db.listAsync(params)) }
-  _bulk(docs, params) { return this.db.then(db => db.bulkAsync(docs, params)) }
-  _insert(doc, params) { return this.db.then(db => db.insertAsync(doc, params)) }
-  _destroy(id, rev) { return this.db.then(db => db.destroyAsync(id, rev)) }
   _view(name, params) { return this.db.then(db => db.viewAsync(name[0], name[1], params)) }
+  _selector(query) { return Promise.promisify(this.connection.request)({ method: 'POST', doc: '_find', db: this.database, body: query }) }
+  _get(id, params) { return this.db.then(db => db.getAsync(id, params)) }
+  _insert(doc, params) { return this.db.then(db => db.insertAsync(doc, params)) }
+  _bulk(docs, params) { return this.db.then(db => db.bulkAsync(docs, params)) }
+  _destroy(id, rev) { return this.db.then(db => db.destroyAsync(id, rev)) }
 
   find(params = {}) {
-    return (params.view ? this._view(params.view.split('/'), params.params) : this._list(Object.assign({ include_docs: true }, params)))
-      .then(obj => this._return(obj))
-      .catch(errorHandler)
+    let result = null
+
+    if (params.view) {
+      result = this._view(params.view.split('/'), params.params)
+    }
+    else if (params.query) {
+      result = this._selector(params.query)
+    }
+    else {
+      result = this._list(Object.assign({ include_docs: true }, params))
+    }
+
+    return result.then(obj => this._return(obj)).catch(errorHandler)
   }
 
   get(id, params = {}) {
