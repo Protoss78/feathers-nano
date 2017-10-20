@@ -1,6 +1,6 @@
 {
-  "name": "@kapmug/feathers-couchdb",
-  "version": "1.3.1",
+  "name": "@kapmug/feathers-nano",
+  "version": "2.0.0",
   "description": "A couchdb service for feathers",
   "main": "lib/",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kapmug/feathers-couchdb.git"
+    "url": "git+https://github.com/kapmug/feathers-nano.git"
   },
   "keywords": [
     "feathers",
@@ -22,9 +22,9 @@
   "author": "Andre Bazaglia",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/bazaglia/feathers-couchdb/issues"
+    "url": "https://github.com/bazaglia/feathers-nano/issues"
   },
-  "homepage": "https://github.com/bazaglia/feathers-couchdb#readme",
+  "homepage": "https://github.com/bazaglia/feathers-nano#readme",
   "babel": {
     "presets": [
       [
