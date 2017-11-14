@@ -35,78 +35,105 @@ class Service {
     return Proto.extend(obj, this)
   }
 
-  _safeAttributes(obj) {
-    delete obj._id
-    delete obj._rev
-    return obj
+  _list(params) {
+    return this.db.then(db => db.listAsync(Object.assign(params, { include_docs: true })))
   }
 
-  _return(data) {
-    const isArray = !data._id
-
-    const parse = obj => {
-      if (!obj) { throw new errors.BadRequest('Document contains an invalid ID.') }
-      Object.assign(obj, { id: obj._id })
-      return this._safeAttributes(obj)
-    }
-
-    const parseArray = arr => {
-      if (arr.rows) {
-        arr.rows.forEach(obj => parse(obj.doc || obj.value))
-      } else {
-        arr.forEach(parse)
-      }
-      return arr
-    }
-
-    return isArray ? parseArray(data) : parse(data)
+  _view(designname, viewname, params) {
+    return this.db.then(db => db.viewAsync(designname, viewname, Object.assign(params, { include_docs: true })))
   }
 
-  _list(params) { return this.db.then(db => db.listAsync(params)) }
-  _view(name, params) { return this.db.then(db => db.viewAsync(name[0], name[1], params)) }
-  _selector(query) { return Promise.promisify(this.connection.request)({ method: 'POST', doc: '_find', db: this.database, body: query }).then(res => res.docs) }
-  _get(id, params) { return this.db.then(db => db.getAsync(id, params)) }
-  _insert(doc, params) { return this.db.then(db => db.insertAsync(doc, params)) }
-  _bulk(docs, params) { return this.db.then(db => db.bulkAsync(docs, params)) }
+  _selector(params) {
+    return Promise.promisify(this.connection.request)({
+      method: 'POST',
+      doc: '_find',
+      db: this.database,
+      body: Object.assign({ execution_stats: true }, params),
+    })
+  }
+
+  _get(id, params) {
+    return this.db.then(db => db.getAsync(id, params))
+  }
+
+  _insert(doc, params) {
+    return this.db
+      .then(db => db.insertAsync(doc, params))
+      .then(res => Object.assign(doc, { _id: res.id, _rev: res.rev }))
+  }
+
+  _bulk(docs, params) {
+    const assign = (data, res) => Object.assign(data, { _id: res.id, _rev: res.rev })
+    const bulkAssign = (arr, res) => arr.map((data, index) => assign(data, res[index]))
+    return this.db
+      .then(db => db.bulkAsync({ docs }, params))
+      .then(res => bulkAssign(docs, res))
+  }
+
   _destroy(id, rev) { return this.db.then(db => db.destroyAsync(id, rev)) }
 
+/**
+ * @param params
+ * @returns {object} {
+    "data": "<Array>"
+    "total": "<total number of records>",
+    "limit": "<max number of items per page>",
+    "skip": "<number of skipped items (offset)>",
+    "bookmark": "<alternative to skip>"
+    }
+*/
   find(params = {}) {
+    params.limit = params.limit || this.paginate.default
     let result = null
 
-    if (params.view) {
-      result = this._view(params.view.split('/'), params.params)
-    }
-    else if (params.query) {
-      result = this._selector(params.query)
+    if (params.selector) {
+      result = this._selector(params).then(res => {
+        return {
+          limit: params.limit,
+          bookmark: res.bookmark,
+          data: res.docs,
+        }
+      })
     }
     else {
-      result = this._list(Object.assign({ include_docs: true }, params))
+      result = this._list(Object.assign(params)).then(res => {
+        return {
+          total: res.total_rows,
+          limit: params.limit,
+          skip: res.offset,
+          data: res.rows.map(row => row.doc)
+        }
+      })
     }
 
-    return result.then(obj => this._return(obj)).catch(errorHandler)
+    return result.catch(errorHandler)
+  }
+
+  view(designname, viewname, params = {}) {
+    params.limit = params.limit || this.paginate.default
+    return this._view(designname, viewname, params)
+      .then(res => {
+        return {
+          total: res.total_rows,
+          limit: params.limit,
+          skip: res.offset,
+          data: res.rows.map(row => row.doc)
+        }
+      })
+      .catch(errorHandler)
   }
 
   get(id, params = {}) {
-    return this._get(id, params)
-      .then(obj => this._return(obj))
-      .catch(errorHandler)
+    return this._get(id, params).catch(errorHandler)
   }
 
   create(data, params = {}) {
-    return (Array.isArray(data) ? this._bulk({ docs: data }, params) : this._insert(data, params))
-      .then(res => {
-        const assign = (data, res) => { return Object.assign(data, { id: res.id }) }
-        const bulkAssign = (data, res) => {
-          data.forEach((element, index) => {
-            element = assign(element, { id: res[index].id })
-          })
-          return data
-        }
-
-        return Array.isArray(data) ? bulkAssign(data, res) : assign(data, res)
-      })
-      .then(res => this._return(res))
-      .catch(errorHandler)
+    return (
+      Array.isArray(data)
+      ? this._bulk(data, params)
+      : this._insert(data, params)
+    )
+    .catch(errorHandler)
   }
 
   update(id, data, params = { include_docs: false }) {
@@ -115,21 +142,19 @@ class Service {
     }
 
     return this._get(id, params)
-      .then(doc => {
-        Object.assign(data, { _rev: doc._rev })
-        return this._insert(data, id).then(() => data)
-      })
+      .then(doc => (
+        Object.assign(data, { _rev: doc._rev }),
+        this._insert(data, id).then(() => data)
+      ))
       .catch(errorHandler)
   }
 
   patch(id, data, params = {}) {
     return this._get(id, params)
-      .then(doc => {
-        const rev = doc._rev
-        doc = this._safeAttributes(doc)
-        mergeDeep(doc, { _rev: rev }, data)
-        return this._insert(doc, id).then(() => Object.assign(doc, { id }))
-      })
+      .then(doc => (
+        mergeDeep(doc, data),
+        this._insert(doc, id).then(res => Object.assign(doc, { _rev: res.rev }))
+      ))
       .catch(errorHandler)
   }
 
