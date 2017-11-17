@@ -83,6 +83,7 @@ class Service {
     }
 */
   find(params = {}) {
+    params = Object.assign({include_docs: true}, params)
     params.limit = params.limit || this.paginate.default
     let result = null
 
@@ -96,8 +97,11 @@ class Service {
       })
     }
     else {
-      params = Object.assign({include_docs: true}, params)
-      result = this._list(params).then(res => {
+      const run = params.view
+        ? this._view(params.view.split('/')[0], params.view.split('/')[1], params)
+        : this._list(params)
+
+      result = run.then(res => {
         return {
           total: res.total_rows,
           limit: params.limit,
@@ -108,21 +112,6 @@ class Service {
     }
 
     return result.catch(errorHandler)
-  }
-
-  view(designname, viewname, params = {}) {
-    params = Object.assign({include_docs: true}, params)
-    params.limit = params.limit || this.paginate.default
-    return this._view(designname, viewname, params)
-      .then(res => {
-        return {
-          total: res.total_rows,
-          limit: params.limit,
-          skip: res.offset,
-          data: params.include_docs ? res.rows.map(row => row.doc) : res.rows
-        }
-      })
-      .catch(errorHandler)
   }
 
   get(id, params = {}) {
