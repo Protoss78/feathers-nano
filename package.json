@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.0",
+    "cloudant-nano": "^6.7.0",
     "feathers-errors": "^2.8.2",
     "uberproto": "^1.2.0"
   },
@@ -61,7 +62,6 @@
     "feathers-hooks": "^2.0.2",
     "feathers-rest": "^1.8.0",
     "feathers-service-tests": "^0.10.2",
-    "nano": "^6.4.0",
     "rimraf": "^2.6.1"
   }
 }
