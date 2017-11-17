@@ -36,11 +36,11 @@ class Service {
   }
 
   _list(params) {
-    return this.db.then(db => db.listAsync(Object.assign(params, { include_docs: true })))
+    return this.db.then(db => db.listAsync(params))
   }
 
   _view(designname, viewname, params) {
-    return this.db.then(db => db.viewAsync(designname, viewname, Object.assign(params, { include_docs: true })))
+    return this.db.then(db => db.viewAsync(designname, viewname, params))
   }
 
   _selector(params) {
@@ -48,7 +48,7 @@ class Service {
       method: 'POST',
       doc: '_find',
       db: this.database,
-      body: Object.assign({ execution_stats: true }, params),
+      body: params,
     })
   }
 
@@ -96,12 +96,13 @@ class Service {
       })
     }
     else {
-      result = this._list(Object.assign(params)).then(res => {
+      params = Object.assign({include_docs: true}, params)
+      result = this._list(params).then(res => {
         return {
           total: res.total_rows,
           limit: params.limit,
           skip: res.offset,
-          data: res.rows.map(row => row.doc)
+          data: params.include_docs ? res.rows.map(row => row.doc) : res.rows
         }
       })
     }
@@ -110,6 +111,7 @@ class Service {
   }
 
   view(designname, viewname, params = {}) {
+    params = Object.assign({include_docs: true}, params)
     params.limit = params.limit || this.paginate.default
     return this._view(designname, viewname, params)
       .then(res => {
@@ -117,7 +119,7 @@ class Service {
           total: res.total_rows,
           limit: params.limit,
           skip: res.offset,
-          data: res.rows.map(row => row.doc)
+          data: params.include_docs ? res.rows.map(row => row.doc) : res.rows
         }
       })
       .catch(errorHandler)
@@ -153,7 +155,7 @@ class Service {
     return this._get(id, params)
       .then(doc => (
         mergeDeep(doc, data),
-        this._insert(doc, id).then(res => Object.assign(doc, { _rev: res.rev }))
+        this._insert(doc, id)
       ))
       .catch(errorHandler)
   }
