@@ -83,7 +83,6 @@ class Service {
     }
 */
   find(params = {}) {
-    params = Object.assign({include_docs: true}, params)
     params.limit = params.limit || this.paginate.default
     let result = null
 
@@ -97,6 +96,8 @@ class Service {
       })
     }
     else {
+      params = Object.assign({include_docs: true}, params)
+
       const run = params.view
         ? this._view(params.view.split('/')[0], params.view.split('/')[1], params)
         : this._list(params)
