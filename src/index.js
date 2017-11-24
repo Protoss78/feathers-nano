@@ -106,7 +106,7 @@ class Service {
         return {
           total: res.total_rows,
           limit: params.limit,
-          skip: res.offset,
+          skip: res.offset - 1,
           data: params.include_docs ? res.rows.map(row => row.doc) : res.rows
         }
       })
