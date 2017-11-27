@@ -23,7 +23,8 @@ export function mergeDeep(target, ...sources) {
         if (!target[key]) Object.assign(target, { [key]: {} })
         mergeDeep(target[key], source[key])
       } else {
-        Object.assign(target, { [key]: source[key] })
+        // Object.assign(target, { [key]: source[key] })
+        source[key] === "" ? delete target[key] : Object.assign(target, { [key]: source[key] });
       }
     }
   }
