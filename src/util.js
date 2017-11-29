@@ -30,3 +30,14 @@ export function mergeDeep(target, ...sources) {
 
   return mergeDeep(target, ...sources)
 }
+
+/**
+ * Given an object, returns a new object containing only
+ * allowed keys
+ * @param {array} keys - Array of allowed keys
+ * @param {object} obj - Original Object
+ * @returns {object} Object containing only allowed keys
+ */
+export function filterByKeys(keys, obj) {
+  return keys.reduce((obj, key) => ({ ...obj, [key]: raw[key] }), {})
+}

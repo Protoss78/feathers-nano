@@ -2,7 +2,7 @@ import Promise from 'bluebird'
 import Proto from 'uberproto'
 import errors from 'feathers-errors'
 import errorHandler from './error-handler'
-import { mergeDeep } from './util'
+import { mergeDeep, filterByKeys } from './util'
 
 class Service {
   constructor(options) {
@@ -44,11 +44,16 @@ class Service {
   }
 
   _selector(params) {
+    const allowedKeys = [
+      'selector', 'limit', 'skip', 'sort', 'fields', 'use_index',
+      'r', 'bookmark', 'update', 'stable', 'stale', 'execution_stats'
+    ]
+
     return Promise.promisify(this.connection.request)({
       method: 'POST',
       doc: '_find',
       db: this.database,
-      body: params,
+      body: filterByKeys(allowedKeys, params),
     })
   }
 
