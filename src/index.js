@@ -4,6 +4,14 @@ import errors from 'feathers-errors'
 import errorHandler from './error-handler'
 import { mergeDeep, filterByKeys } from './util'
 
+const removeInvalidParams = params => {
+  const allowedParams = [
+    'selector', 'limit', 'skip', 'sort', 'fields', 'use_index',
+    'r', 'bookmark', 'update', 'stable', 'stale', 'execution_stats'
+  ]
+  return filterByKeys(allowedParams, params)
+}
+
 class Service {
   constructor(options) {
     if (!options) {
@@ -44,16 +52,11 @@ class Service {
   }
 
   _selector(params) {
-    const allowedKeys = [
-      'selector', 'limit', 'skip', 'sort', 'fields', 'use_index',
-      'r', 'bookmark', 'update', 'stable', 'stale', 'execution_stats'
-    ]
-
     return Promise.promisify(this.connection.request)({
       method: 'POST',
       doc: '_find',
       db: this.database,
-      body: filterByKeys(allowedKeys, params),
+      body: params,
     })
   }
 
@@ -89,35 +92,37 @@ class Service {
 */
   find(params = {}) {
     params.limit = params.limit || this.paginate.default
-    let result = null
 
-    if (params.selector) {
-      result = this._selector(params).then(res => {
-        return {
+    const selector = params => {
+      return this._selector(removeInvalidParams(params))
+        .then(res => ({
           limit: params.limit,
           bookmark: res.bookmark,
           data: res.docs,
-        }
-      })
+        }))
     }
-    else {
-      params = Object.assign({include_docs: true}, params)
 
-      const run = params.view
-        ? this._view(params.view.split('/')[0], params.view.split('/')[1], params)
-        : this._list(params)
+    const view = params => {
+      return this._view(params.view.split('/')[0], params.view.split('/')[1], params)
+    }
 
-      result = run.then(res => {
-        return {
+    const list = params => {
+      return this._list(params)
+    }
+
+    const viewOrList = params => {
+      const query = {include_docs: true, ...params}
+      return (params.view ? view(query) : list(query))
+        .then(res => ({
           total: res.total_rows,
           limit: params.limit,
           skip: res.offset - 1,
           data: params.include_docs ? res.rows.map(row => row.doc) : res.rows
-        }
-      })
+        }))
     }
 
-    return result.catch(errorHandler)
+    return (params.selector ? selector(params) : viewOrList(params))
+      .catch(errorHandler)
   }
 
   get(id, params = {}) {
