@@ -7,7 +7,12 @@ import { mergeDeep, filterByKeys } from './util'
 const removeInvalidParams = params => {
   const allowedParams = [
     'selector', 'limit', 'skip', 'sort', 'fields', 'use_index',
-    'r', 'bookmark', 'update', 'stable', 'stale', 'execution_stats'
+    'r', 'bookmark', 'update', 'stable', 'stale', 'execution_stats',
+    'conflicts', 'descending', 'endkey', 'end_key', 'endkey_docid',
+    'end_key_doc_id', 'include_docs', 'inclusive_end', 'key', 'keys',
+    'startkey', 'start_key', 'startkey_docid', 'start_key_doc_id',
+    'update_seq', 'options', 'filters', 'lists', 'rewrites', 'shows',
+    'updates', 'validate_doc_update', 'views',
   ]
   return filterByKeys(allowedParams, params)
 }
@@ -103,21 +108,20 @@ class Service {
     }
 
     const view = params => {
-      return this._view(params.view.split('/')[0], params.view.split('/')[1], params)
+      return this._view(params.view.split('/')[0], params.view.split('/')[1], removeInvalidParams(params))
     }
 
     const list = params => {
-      return this._list(params)
+      return this._list(removeInvalidParams(params))
     }
 
     const viewOrList = params => {
-      const query = {include_docs: true, ...params}
-      return (params.view ? view(query) : list(query))
+      return (params.view ? view(query) : list({...params, include_docs: true}))
         .then(res => ({
           total: res.total_rows,
           limit: params.limit,
           skip: res.offset - 1,
-          data: params.include_docs ? res.rows.map(row => row.doc) : res.rows
+          data: res.rows.map(row => row.doc),
         }))
     }
 
