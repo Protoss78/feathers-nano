@@ -130,7 +130,7 @@ class Service {
   }
 
   get(id, params = {}) {
-    return this._get(id, params).catch(errorHandler)
+    return this._get(id, removeInvalidParams(params)).catch(errorHandler)
   }
 
   create(data, params = {}) {
