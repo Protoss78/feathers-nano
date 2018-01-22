@@ -136,8 +136,8 @@ class Service {
   create(data, params = {}) {
     return (
       Array.isArray(data)
-      ? this._bulk(data, params)
-      : this._insert(data, params)
+      ? this._bulk(data, removeInvalidParams(params))
+      : this._insert(data, removeInvalidParams(params))
     )
     .catch(errorHandler)
   }
@@ -147,7 +147,7 @@ class Service {
       return Promise.reject(new errors.BadRequest('Not replacing multiple records. Did you mean `patch`?'))
     }
 
-    return this._get(id, params)
+    return this._get(id, removeInvalidParams(params))
       .then(doc => (
         Object.assign(data, { _rev: doc._rev }),
         this._insert(data, id).then(() => data)
@@ -156,7 +156,7 @@ class Service {
   }
 
   patch(id, data, params = {}) {
-    return this._get(id, params)
+    return this._get(id, removeInvalidParams(params))
       .then(doc => (
         mergeDeep(doc, data),
         this._insert(doc, id)
@@ -165,7 +165,7 @@ class Service {
   }
 
   remove(id, params = {}) {
-    return this._get(id, params)
+    return this._get(id, removeInvalidParams(params))
       .then(doc => this._destroy(doc._id, doc._rev))
       .catch(errorHandler)
   }
